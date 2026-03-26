@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  password      String
+  name          String?
+  role          Role            @default(STUDENT)
+  appointments  Appointment[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Service {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  duration    Int         // duration in minutes
+  slots       TimeSlot[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model TimeSlot {
+  id           String        @id @default(cuid())
+  serviceId    String
+  service      Service       @relation(fields: [serviceId], references: [id])
+  startTime    DateTime
+  endTime      DateTime
+  capacity     Int
+  appointments Appointment[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  slotId        String
+  slot          TimeSlot          @relation(fields: [slotId], references: [id])
+  status        AppointmentStatus @default(PENDING)
+  queuePosition Int
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
